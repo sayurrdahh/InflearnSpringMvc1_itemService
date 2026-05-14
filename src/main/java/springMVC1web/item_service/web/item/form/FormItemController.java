@@ -7,16 +7,45 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import springMVC1web.item_service.domain.item.DeliveryCode;
 import springMVC1web.item_service.domain.item.Item;
 import springMVC1web.item_service.domain.item.ItemRepository;
+import springMVC1web.item_service.domain.item.ItemType;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Controller
 @RequestMapping("/form/items")
 @RequiredArgsConstructor //final 이 붙은 멤버변수만 사용해서 생성자를 자동으로 만들어준다.
 public class FormItemController {
+
+    @ModelAttribute("regions")
+    public Map<String, String> regions() {
+        Map<String, String> regions = new LinkedHashMap<>();
+        //LinkedHashMap : 순서 보장
+        regions.put("SEOUL","서울");
+        regions.put("BUSAN","부산");
+        regions.put("JEJU","제주");
+        return regions;
+    }
+
+    @ModelAttribute("itemTypes")
+    public ItemType[] itemTypes(){
+        return ItemType.values();
+    }
+
+    @ModelAttribute("deliveryCodes")
+    public List<DeliveryCode> deliveryCodes(){
+        List<DeliveryCode> deliveryCodes = new ArrayList<>();
+        deliveryCodes.add(new DeliveryCode("FAST", "빠른 배송"));
+        deliveryCodes.add(new DeliveryCode("NORMAL", "일반 배송"));
+        deliveryCodes.add(new DeliveryCode("SLOW", "느린 배송"));
+        return deliveryCodes;
+    }
 
     private final ItemRepository itemRepository;
 
@@ -41,13 +70,16 @@ public class FormItemController {
     @GetMapping("/add")
     public String addForm(Model model){
         model.addAttribute("item",new Item());
+
+
         return "form/addForm";
     }
 
     @PostMapping("/add")
     public String addItem(Item item, RedirectAttributes redirectAttributes){
         log.info("item.open={}", item.getOpen());
-
+        log.info("item.regions={}", item.getRegions());
+        log.info("item.itemType={}", item.getItemType());
         //리다이렉트 할 때 파라미터를 붙여서 해보자
         Item savedItem = itemRepository.save(item); //저장된 결과를 가져온다.
         redirectAttributes.addAttribute("itemId",savedItem.getId());
@@ -69,6 +101,7 @@ public class FormItemController {
         itemRepository.update(itemId, item);
         return "redirect:/form/items/{itemId}";
     }
+
 
     //초기 데이터 설정
     @PostConstruct
